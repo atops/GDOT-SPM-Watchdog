@@ -1,0 +1,52 @@
+
+/*** UI styles ***/
+
+/*@font-face {  
+  font-family: "Ubuntu";
+  src: url(Ubuntu-R.ttf) format('truetype'),;
+}*/
+
+body {
+  /*font-family: 'Ubuntu';*/
+  font-size: 12px;
+  
+}
+
+.form-control {
+  font-size: 12px;
+}
+.datepicker-days {
+  font-size: 12px;
+}
+.input-daterange {
+  font-size: 12px;
+}
+
+h2 {
+  /*font-family: 'PT Serif';*/
+  font-weight: 700;
+  padding-top: 5px;
+  padding-bottom: 35px;
+  padding-left: 5px;
+  font-size: 20px;
+  color: #eee;
+  background-color: #256194;
+}
+
+.tabbable {
+  margin-left: 20px;  
+}
+
+.help-block {
+  
+}
+
+.form-group {
+    margin-bottom: 5px;
+}
+
+.checkbox {
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
