@@ -8,7 +8,6 @@
 #
 
 library(shiny)
-#library(aws.s3)
 library(lubridate)
 library(dplyr)
 library(feather)
@@ -25,15 +24,10 @@ source("plot_functions.R")
 ui <- fluidPage(theme = "style.css",
                 tags$link(rel="stylesheet"),
                 
-    # # Logos
-    # tags$div(
-    #     img(src="GDOT_Logo.png", align="left", height="50px")),
-    # tags$br(), 
-    # tags$br(),
-    
+
     # Application title
-    #titlePanel("Signal Performance Measures (SPM) Watchdog Alerts"),
-    titlePanel(title=div(img(src="GDOTLogo.svg", align="left"), "Signal Performance Measures (SPM) Watchdog Alerts")),
+    titlePanel(title=div(img(src="GDOTLogo.svg", align="left"), 
+                         "Signal Performance Measures (SPM) Watchdog Alerts")),
     
     
     
