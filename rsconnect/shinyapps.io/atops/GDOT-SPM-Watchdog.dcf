@@ -5,9 +5,9 @@ account: atops
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 389067
-bundleId: 1503779
+bundleId: 1504125
 url: https://atops.shinyapps.io/GDOT-SPM-Watchdog/
-when: 1532705664.75887
+when: 1532719284.07467
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: SPMWatchDogErrorEvents.feather|SPMWatchDogErrorEvents.feather.zip|watchdog.feather.zip|watchdog_.feather
+ignoredFiles: get_watchdog_alerts.py|SPMWatchDogErrorEvents.feather|SPMWatchDogErrorEvents.feather.zip|www/Ubuntu-Regular.ttf

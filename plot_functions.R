@@ -36,7 +36,7 @@ plot_alerts <- function(df, date_range) {
             scale_x_date(position = "top") + #, limits = date_range) #+
             scale_y_discrete(limits = rev(levels(df$signal_phase))) +
             labs(x = "",
-                 y = "Intersection (and phase, if applicable)") +
+                 y = "") + #Intersection (and phase, if applicable)") +
 
 
             # draw white gridlines between tick labels
