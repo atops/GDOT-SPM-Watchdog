@@ -83,7 +83,7 @@ ui <- fluidPage(theme = "style.css",
 
 )
 
-# Define server logic required to draw a histogram
+# Define server logic
 server <- function(input, output, session) {
 
     
@@ -109,8 +109,6 @@ server <- function(input, output, session) {
     
     
     filtered_alerts <- reactive({
-        
-        input$date_button
         
         alerts_by_date <- filter_alerts_by_date(alerts, input$date_range)
         

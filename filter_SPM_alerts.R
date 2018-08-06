@@ -10,8 +10,8 @@ library(aws.s3)
 
 # library(httr)
 # set_config(
-#     use_proxy("gdot-enterprise", port = 8080, 
-#               username = Sys.getenv("GDOT_USERNAME"), 
+#     use_proxy("gdot-enterprise", port = 8080,
+#               username = Sys.getenv("GDOT_USERNAME"),
 #               password = Sys.getenv("GDOT_PASSWORD")))
 
 
