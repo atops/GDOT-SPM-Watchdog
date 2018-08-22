@@ -7,21 +7,23 @@ library(shiny)
 library(yaml)
 library(DT)
 library(aws.s3)
-
-# library(httr)
-# set_config(
-#     use_proxy("gdot-enterprise", port = 8080,
-#               username = Sys.getenv("GDOT_USERNAME"),
-#               password = Sys.getenv("GDOT_PASSWORD")))
+library(httr)
 
 
-Sys.setenv(TZ="America/New_York")
-
-config <- yaml.load_file("gdot_watchdog_config.yaml")
-
-Sys.setenv("AWS_ACCESS_KEY_ID" = config$AWS_ACCESS_KEY_ID,
-           "AWS_SECRET_ACCESS_KEY" = config$AWS_SECRET_ACCESS_KEY,
-           "AWS_DEFAULT_REGION" = config$AWS_DEFAULT_REGION)
+if (Sys.info()["nodename"] == "GOTO3213490") { # The SAM
+    set_config(
+        use_proxy("gdot-enterprise", port = 8080,
+                  username = Sys.getenv("GDOT_USERNAME"),
+                  password = Sys.getenv("GDOT_PASSWORD")))
+} else { # shinyapps.io
+    Sys.setenv(TZ="America/New_York")
+    
+    config <- yaml.load_file("gdot_watchdog_config.yaml")
+    
+    Sys.setenv("AWS_ACCESS_KEY_ID" = config$AWS_ACCESS_KEY_ID,
+               "AWS_SECRET_ACCESS_KEY" = config$AWS_SECRET_ACCESS_KEY,
+               "AWS_DEFAULT_REGION" = config$AWS_DEFAULT_REGION)
+}
 
 
 
