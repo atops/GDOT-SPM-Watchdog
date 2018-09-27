@@ -3,6 +3,7 @@
 library(lubridate)
 library(dplyr)
 library(tidyr)
+library(forcats)
 library(shiny)
 library(yaml)
 library(DT)
@@ -72,31 +73,38 @@ filter_alerts <- function(alerts, alert_type_, zone_, phase_, id_filter_)  {
     
     if (!df_is_empty) {
         
-        table_df <- df %>%
-            select(Zone,
-                   SignalID, 
-                   Name, 
-                   Phase,
-                   Alert, 
-                   TimeStamp) %>%
-            group_by(Zone,
-                     SignalID,
-                     Name,
-                     Phase,
-                     Alert) %>% 
-            summarize("Occurrences" = n()) %>% 
-            ungroup() 
-        
-        if (alert_type_ != "Missing Records") {
+        if (alert_type_ == "Missing Records") {
+            
+            table_df <- df %>%
+                group_by(Zone, SignalID, Name, Alert) %>% 
+                summarize("Occurrences" = n()) %>% 
+                ungroup() 
             
             plot_df <- df %>%
-                mutate(Phase = as.character(Phase)) %>% 
-                unite(signal_phase, Name, Phase, sep = " | ph") %>% # potential problem
-                mutate(signal_phase = factor(signal_phase)) 
+                mutate(signal_phase = factor(Name)) 
             
+        } else if (alert_type_ == "Bad Detection") {
+            
+            table_df <- df %>%
+                group_by(Zone, SignalID, Name, Detector = as.integer(as.character(DetectorID)), Alert) %>% 
+                summarize("Occurrences" = n()) %>% 
+                ungroup() 
+            
+            plot_df <- df %>%
+                mutate(DetectorID = as.character(DetectorID)) %>%
+                unite(signal_phase, Name, DetectorID, sep = " | det ") %>%
+                mutate(signal_phase = factor(signal_phase))
+
         } else {
             
-            plot_df <- mutate(df, signal_phase = Name)
+            table_df <- df %>%
+                group_by(Zone, SignalID, Name, Phase, Alert) %>% 
+                summarize("Occurrences" = n()) %>% 
+                ungroup() 
+            plot_df <- df %>%
+                mutate(Phase = as.character(Phase)) %>% 
+                unite(signal_phase, Name, Phase, sep = " | ph ") %>% # potential problem
+                mutate(signal_phase = factor(signal_phase)) 
         }
         
         intersections <- length(unique(plot_df$signal_phase))

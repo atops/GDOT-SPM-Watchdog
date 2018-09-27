@@ -26,9 +26,8 @@ engine = sq.create_engine(connection_string, pool_size=20)
 with engine.connect() as conn:
 
     SPMWatchDogErrorEvents = pd.read_sql_table('SPMWatchDogErrorEvents', con=conn)
+    BadDetectors = pd.read_sql_table('BadDetectors', con=conn)
 
-wd = SPMWatchDogErrorEvents.loc[SPMWatchDogErrorEvents.SignalID != 'null', ]
-wd = wd.assign(SignalID = lambda x: x.SignalID.astype('uint16'))
 
 # Read Corridors File on The SAM
 
@@ -38,14 +37,32 @@ corridors = (corridors[~corridors.SignalID.isna()]
             .drop(['Description'], axis=1))
 
 # Join and munge the Watchdog Alerts, wd
+
+wd = SPMWatchDogErrorEvents.loc[SPMWatchDogErrorEvents.SignalID != 'null', ]
+wd.SignalID = wd.SignalID.astype('uint16')
+
 wd = wd.set_index(['SignalID']).join(corridors.set_index(['SignalID']), how = 'left')
-wd = wd[~wd.Corridor.isna()].drop(['ID'], axis=1)
+wd = (wd[~wd.Corridor.isna()].drop(['ID', 'Asof', 'Milepost', 'Agency'], axis=1)
+    .assign(TimeStamp = lambda x: x.TimeStamp.dt.date))
 
-wd.TimeStamp = wd.TimeStamp.dt.date
 
+bd = BadDetectors.loc[BadDetectors.SignalID != 'null', ]
+bd.SignalID = bd.SignalID.astype('uint16')
+
+bd = bd.set_index(['SignalID']).join(corridors.set_index(['SignalID']), how = 'left')
+bd = (bd[~bd.Corridor.isna()].drop(['Asof', 'Milepost', 'Agency'], axis=1)
+    .rename(columns = {'Detector': 'DetectorID', 
+                       'Date': 'TimeStamp'})
+    .assign(TimeStamp = lambda x: x.TimeStamp.dt.date))
+
+# Concatenate Watchdog with Bad Detectors
+    
+wd = pd.concat([wd, bd], sort = True)
 # Create Alerts column with five possible values
 
 wd = wd.assign(Alert = '')
+wd.loc[wd.Message.isna(), 'Alert'] = 'Bad Detection'
+wd.loc[wd.Message.isna(), 'Message'] = 'Bad Detection'
 wd.loc[wd.Message.str.startswith('Force Offs'), 'Alert'] = 'Force Offs'
 wd.loc[wd.Message.str.startswith('Count'), 'Alert'] = 'Count'
 wd.loc[wd.Message.str.startswith('Max Outs'), 'Alert'] = 'Max Outs'
@@ -68,6 +85,22 @@ wd.loc[wd.Zone_Group=='D4', 'Zone'] = 'District 4'
 wd.loc[wd.Zone_Group=='D5', 'Zone'] = 'District 5'
 wd.loc[wd.Zone_Group=='D7', 'Zone'] = 'District 7'
 
+
+#bd.Zone = bd.Zone.astype('str')
+#bd.loc[bd.Zone=='Z1', 'Zone'] = 'Zone 1'
+#bd.loc[bd.Zone=='Z2', 'Zone'] = 'Zone 2'
+#bd.loc[bd.Zone=='Z3', 'Zone'] = 'Zone 3'
+#bd.loc[bd.Zone=='Z4', 'Zone'] = 'Zone 4'
+#bd.loc[bd.Zone=='Z5', 'Zone'] = 'Zone 5'
+#bd.loc[bd.Zone=='Z6', 'Zone'] = 'Zone 6'
+#bd.loc[bd.Zone=='Z7', 'Zone'] = 'Zone 7'
+#
+#bd.loc[bd.Zone_Group=='D3', 'Zone'] = 'District 3'
+#bd.loc[bd.Zone_Group=='D4', 'Zone'] = 'District 4'
+#bd.loc[bd.Zone_Group=='D5', 'Zone'] = 'District 5'
+#bd.loc[bd.Zone_Group=='D7', 'Zone'] = 'District 7'
+
+
 # Convert to category data type wherever possible to reduce file size
 
 wd.Alert = wd.Alert.astype('category')
@@ -78,7 +111,14 @@ wd.ErrorCode = wd.ErrorCode.astype('category')
 wd.Zone = wd.Zone.astype('category')
 wd.Zone_Group = wd.Zone_Group.astype('category')
 
+wd.Corridor = wd.Corridor.astype('category')
+wd.Name = wd.Name.astype('category')
 
+#bd.DetectorID = bd.DetectorID = bd.DetectorID.astype('category')
+#bd.Zone = bd.Zone.astype('category')
+#bd.Zone_Group = bd.Zone_Group.astype('category')
+#bd.Corridor = bd.Corridor.astype('category')
+#bd.Name = bd.Name.astype('category')
 
 #wd.reset_index().to_parquet('SPMWatchDogErrorEvents.parquet')
 #s3.upload_file(Filename='SPMWatchDogErrorEvents.parquet',
@@ -86,22 +126,28 @@ wd.Zone_Group = wd.Zone_Group.astype('category')
 #               Key='watchdog/SPMWatchDogErrorEvents.parquet')
 
 
-# Write to Feather file
+# Write to Feather file - WatchDog
+
+def s3_upload(df, feather_filename, zipfile_filename):
+    df.reset_index().to_feather(feather_filename)
+    
+    # Compress file
+    
+    zf = zipfile.ZipFile(zipfile_filename, 'w', zipfile.ZIP_DEFLATED)
+    zf.write(feather_filename)
+    zf.close()
+    
+    # Upload compressed file to s3
+    
+    s3.upload_file(Filename=zipfile_filename,
+                   Bucket='gdot-devices', 
+                   Key=zipfile_filename)
 
 feather_filename = 'SPMWatchDogErrorEvents.feather'
-zipfile_filename = feather_filename + '.zip'
-wd.reset_index().to_feather(feather_filename)
+#zipfile_filename = feather_filename + '.zip'
+s3_upload(wd, feather_filename, feather_filename + '.zip')
 
-# Compress file
 
-zf = zipfile.ZipFile(zipfile_filename, 'w', zipfile.ZIP_DEFLATED)
-zf.write(feather_filename)
-zf.close()
 
-# Upload compressed file to s3
-
-s3.upload_file(Filename=zipfile_filename,
-               Bucket='gdot-devices', 
-               Key=zipfile_filename)
 
 

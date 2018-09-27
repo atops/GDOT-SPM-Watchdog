@@ -50,7 +50,8 @@ ui <- fluidPage(theme = "style.css",
                                      "Pedestrian Activations",
                                      "Force Offs",
                                      "Max Outs",
-                                     "Count"),
+                                     "Count",
+                                     "Bad Detection"),
                          selected = "Missing Records")
         ),
         
