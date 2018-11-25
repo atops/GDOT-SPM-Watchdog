@@ -26,8 +26,9 @@ engine = sq.create_engine(connection_string, pool_size=20)
 with engine.connect() as conn:
 
     SPMWatchDogErrorEvents = pd.read_sql_table('SPMWatchDogErrorEvents', con=conn)
-    BadDetectors = pd.read_sql_table('BadDetectors', con=conn)
+    #BadDetectors = pd.read_sql_table('BadDetectors', con=conn)
 
+BadDetectors = pd.read_feather('../GDOT-Flexdashboard-Report/bad_detectors.feather')
 
 # Read Corridors File on The SAM
 

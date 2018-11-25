@@ -81,7 +81,8 @@ filter_alerts <- function(alerts, alert_type_, zone_, phase_, id_filter_)  {
                 ungroup() 
             
             plot_df <- df %>%
-                mutate(signal_phase = factor(Name)) 
+                unite(Name2, SignalID, Name, sep = ": ") %>%
+                mutate(signal_phase = factor(Name2)) 
             
         } else if (alert_type_ == "Bad Detection") {
             
@@ -92,7 +93,8 @@ filter_alerts <- function(alerts, alert_type_, zone_, phase_, id_filter_)  {
             
             plot_df <- df %>%
                 mutate(DetectorID = as.character(DetectorID)) %>%
-                unite(signal_phase, Name, DetectorID, sep = " | det ") %>%
+                unite(signal_phase2, Name, DetectorID, sep = " | det ") %>%
+                unite(signal_phase, SignalID, signal_phase2, sep = ": ") %>%
                 mutate(signal_phase = factor(signal_phase))
 
         } else {
@@ -103,7 +105,8 @@ filter_alerts <- function(alerts, alert_type_, zone_, phase_, id_filter_)  {
                 ungroup() 
             plot_df <- df %>%
                 mutate(Phase = as.character(Phase)) %>% 
-                unite(signal_phase, Name, Phase, sep = " | ph ") %>% # potential problem
+                unite(signal_phase2, Name, Phase, sep = " | ph ") %>% # potential problem
+                unite(signal_phase, SignalID, signal_phase2, sep = ": ") %>%
                 mutate(signal_phase = factor(signal_phase)) 
         }
         

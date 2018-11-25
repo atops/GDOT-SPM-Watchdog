@@ -23,6 +23,7 @@ source("plot_functions.R")
 # Define UI for application
 ui <- fluidPage(theme = "style.css",
                 tags$link(rel="stylesheet"),
+                tags$head(includeHTML(("google-analytics.html"))),
                 
 
     # Application title
