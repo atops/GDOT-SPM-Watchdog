@@ -7,19 +7,36 @@ Created on Thu Jul 26 14:36:14 2018
 
 import pandas as pd
 import sqlalchemy as sq
+import pyodbc
 import os
 import boto3
 import zipfile
+import feather
 
 pd.options.display.max_columns = 10
 s3 = boto3.client('s3')
 
-uid = os.environ['ATSPM_USERNAME']
-pwd = os.environ['ATSPM_PASSWORD']
-dsn = 'sqlodbc'
-connection_string = 'mssql+pyodbc://{}:{}@{}'.format(uid, pwd, dsn)
+if os.name == 'nt':
+    
+    uid = os.environ['ATSPM_USERNAME']
+    pwd = os.environ['ATSPM_PASSWORD']
+    dsn = 'sqlodbc'
+    connection_string = 'mssql+pyodbc://{}:{}@{}'.format(uid, pwd, dsn)
+    
+    engine = sq.create_engine(connection_string, pool_size=20)
 
-engine = sq.create_engine(connection_string, pool_size=20)
+elif os.name=='posix':
+
+    def connect():
+        return pyodbc.connect(
+            'DRIVER=FreeTDS;' + 
+            'SERVER={};'.format(os.environ["ATSPM_SERVER_INSTANCE"]) +
+            'DATABASE={};'.format(os.environ["ATSPM_DB"]) +
+            'UID={};'.format(os.environ['ATSPM_USERNAME']) +
+            'PWD={};'.format(os.environ['ATSPM_PASSWORD']) +
+            'TDS_Version=8.0;')
+    
+    engine = sq.create_engine('mssql://', creator=connect)
 
 # Query ATSPM Watchdog Alerts Table
 
@@ -28,11 +45,11 @@ with engine.connect() as conn:
     SPMWatchDogErrorEvents = pd.read_sql_table('SPMWatchDogErrorEvents', con=conn)
     #BadDetectors = pd.read_sql_table('BadDetectors', con=conn)
 
-BadDetectors = pd.read_feather('../GDOT-Flexdashboard-Report/bad_detectors.feather')
+BadDetectors = feather.read_dataframe('../GDOT-Flexdashboard-Report/bad_detectors.feather')
 
 # Read Corridors File on The SAM
 
-corridors = pd.read_feather('../GDOT-Flexdashboard-Report/corridors.feather')
+corridors = feather.read_dataframe('../GDOT-Flexdashboard-Report/corridors.feather')
 corridors = (corridors[~corridors.SignalID.isna()]
             .assign(SignalID = lambda x: x.SignalID.astype('uint16'))
             .drop(['Description'], axis=1))
